@@ -19,8 +19,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Calendar } from '@/components/ui/calendar'
-import { ChevronLeft, ChevronRight, Search, CalendarIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, CalendarIcon, MapPin, Camera } from 'lucide-react'
 import { format, parse } from 'date-fns'
 
 interface AttendanceRecord {
@@ -31,6 +37,12 @@ interface AttendanceRecord {
   checkOut: string | null
   status: string
   note: string | null
+  checkInPhoto: string | null
+  checkOutPhoto: string | null
+  checkInLat: string | null
+  checkInLng: string | null
+  checkOutLat: string | null
+  checkOutLng: string | null
   user: {
     name: string
     email: string
@@ -44,6 +56,13 @@ interface Pagination {
   limit: number
   total: number
   totalPages: number
+}
+
+interface PhotoViewData {
+  url: string
+  lat: string
+  lng: string
+  label: string
 }
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string }> = {
@@ -77,6 +96,7 @@ export function AdminAttendance() {
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [page, setPage] = useState(1)
+  const [viewPhoto, setViewPhoto] = useState<PhotoViewData | null>(null)
 
   const fetchAttendance = useCallback(async () => {
     setLoading(true)
@@ -129,6 +149,25 @@ export function AdminAttendance() {
     } catch {
       return dateStr
     }
+  }
+
+  const formatDateForLabel = (dateStr: string) => {
+    try {
+      const parsed = parse(dateStr, 'yyyy-MM-dd', new Date())
+      return format(parsed, 'dd MMM yyyy')
+    } catch {
+      return dateStr
+    }
+  }
+
+  const formatGpsCoords = (lat: string | null, lng: string | null): string | null => {
+    if (!lat && !lng) return null
+    if (lat && lng) return `${lat}, ${lng}`
+    return lat || lng || null
+  }
+
+  const hasAnyPhoto = (record: AttendanceRecord) => {
+    return !!(record.checkInPhoto || record.checkOutPhoto)
   }
 
   return (
@@ -210,6 +249,8 @@ export function AdminAttendance() {
                       <TableHead>Tanggal</TableHead>
                       <TableHead>Jam Masuk</TableHead>
                       <TableHead>Jam Keluar</TableHead>
+                      <TableHead className="hidden lg:table-cell">Foto Masuk</TableHead>
+                      <TableHead className="hidden lg:table-cell">Foto Keluar</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="hidden md:table-cell">Catatan</TableHead>
                     </TableRow>
@@ -217,37 +258,128 @@ export function AdminAttendance() {
                   <TableBody>
                     {filtered.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center text-slate-500">
+                        <TableCell colSpan={9} className="h-24 text-center text-slate-500">
                           Tidak ada data kehadiran
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filtered.map((r, idx) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="text-slate-500">
-                            {(page - 1) * 20 + idx + 1}
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium text-slate-900">{r.user.name}</p>
-                              <p className="text-xs text-slate-500">{r.user.department || '-'}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-slate-600">
-                            {formatDateDisplay(r.date)}
-                          </TableCell>
-                          <TableCell className="text-slate-600">
-                            {r.checkIn || '-'}
-                          </TableCell>
-                          <TableCell className="text-slate-600">
-                            {r.checkOut || '-'}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(r.status)}</TableCell>
-                          <TableCell className="hidden md:table-cell text-slate-500">
-                            {r.note || '-'}
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      filtered.map((r, idx) => {
+                        const checkInGps = formatGpsCoords(r.checkInLat, r.checkInLng)
+                        const checkOutGps = formatGpsCoords(r.checkOutLat, r.checkOutLng)
+
+                        return (
+                          <TableRow key={r.id}>
+                            <TableCell className="text-slate-500">
+                              {(page - 1) * 20 + idx + 1}
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium text-slate-900">{r.user.name}</p>
+                                <p className="text-xs text-slate-500">{r.user.department || '-'}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-slate-600">
+                              {formatDateDisplay(r.date)}
+                            </TableCell>
+                            <TableCell className="text-slate-600">
+                              {r.checkIn || '-'}
+                            </TableCell>
+                            <TableCell className="text-slate-600">
+                              {r.checkOut || '-'}
+                            </TableCell>
+                            {/* Foto Masuk - hidden on small screens */}
+                            <TableCell className="hidden lg:table-cell">
+                              {r.checkInPhoto ? (
+                                <div className="flex flex-col items-start gap-0.5">
+                                  <img
+                                    src={r.checkInPhoto}
+                                    alt="Foto masuk"
+                                    className="h-10 w-10 rounded-full object-cover cursor-pointer hover:opacity-80 hover:scale-105 transition-all"
+                                    onClick={() =>
+                                      setViewPhoto({
+                                        url: r.checkInPhoto!,
+                                        lat: r.checkInLat || '',
+                                        lng: r.checkInLng || '',
+                                        label: `Foto Check-In - ${r.user.name} - ${formatDateForLabel(r.date)}`,
+                                      })
+                                    }
+                                  />
+                                  {checkInGps && (
+                                    <span className="flex items-center gap-0.5 text-[10px] text-slate-400 leading-tight">
+                                      <MapPin className="h-2.5 w-2.5 shrink-0" />
+                                      {checkInGps}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400">Tidak ada</span>
+                              )}
+                            </TableCell>
+                            {/* Foto Keluar - hidden on small screens */}
+                            <TableCell className="hidden lg:table-cell">
+                              {r.checkOutPhoto ? (
+                                <div className="flex flex-col items-start gap-0.5">
+                                  <img
+                                    src={r.checkOutPhoto}
+                                    alt="Foto keluar"
+                                    className="h-10 w-10 rounded-full object-cover cursor-pointer hover:opacity-80 hover:scale-105 transition-all"
+                                    onClick={() =>
+                                      setViewPhoto({
+                                        url: r.checkOutPhoto!,
+                                        lat: r.checkOutLat || '',
+                                        lng: r.checkOutLng || '',
+                                        label: `Foto Check-Out - ${r.user.name} - ${formatDateForLabel(r.date)}`,
+                                      })
+                                    }
+                                  />
+                                  {checkOutGps && (
+                                    <span className="flex items-center gap-0.5 text-[10px] text-slate-400 leading-tight">
+                                      <MapPin className="h-2.5 w-2.5 shrink-0" />
+                                      {checkOutGps}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400">Tidak ada</span>
+                              )}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(r.status)}</TableCell>
+                            <TableCell className="hidden md:table-cell text-slate-500">
+                              <div className="flex items-center gap-2">
+                                <span>{r.note || '-'}</span>
+                                {/* Mobile camera icon - shown only on screens < lg */}
+                                {hasAnyPhoto(r) && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 lg:hidden shrink-0"
+                                    onClick={() => {
+                                      // Show the first available photo
+                                      if (r.checkInPhoto) {
+                                        setViewPhoto({
+                                          url: r.checkInPhoto,
+                                          lat: r.checkInLat || '',
+                                          lng: r.checkInLng || '',
+                                          label: `Foto Check-In - ${r.user.name} - ${formatDateForLabel(r.date)}`,
+                                        })
+                                      } else if (r.checkOutPhoto) {
+                                        setViewPhoto({
+                                          url: r.checkOutPhoto,
+                                          lat: r.checkOutLat || '',
+                                          lng: r.checkOutLng || '',
+                                          label: `Foto Check-Out - ${r.user.name} - ${formatDateForLabel(r.date)}`,
+                                        })
+                                      }
+                                    }}
+                                  >
+                                    <Camera className="h-3.5 w-3.5 text-slate-500" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
                     )}
                   </TableBody>
                 </Table>
@@ -290,6 +422,34 @@ export function AdminAttendance() {
           )}
         </CardContent>
       </Card>
+
+      {/* Photo Preview Dialog */}
+      <Dialog open={!!viewPhoto} onOpenChange={(open) => !open && setViewPhoto(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-slate-900">
+              {viewPhoto?.label}
+            </DialogTitle>
+          </DialogHeader>
+          {viewPhoto && (
+            <div className="space-y-3">
+              <div className="overflow-hidden rounded-lg border">
+                <img
+                  src={viewPhoto.url}
+                  alt={viewPhoto.label}
+                  className="w-full h-auto object-contain max-h-[70vh]"
+                />
+              </div>
+              {(viewPhoto.lat || viewPhoto.lng) && (
+                <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                  <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
+                  <span>{formatGpsCoords(viewPhoto.lat, viewPhoto.lng)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

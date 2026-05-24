@@ -6,6 +6,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
   Table,
   TableBody,
   TableCell,
@@ -20,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Camera } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface AttendanceRecord {
@@ -29,6 +36,12 @@ interface AttendanceRecord {
   checkIn: string | null
   checkOut: string | null
   status: string
+  checkInPhoto: string | null
+  checkOutPhoto: string | null
+  checkInLat: string | null
+  checkInLng: string | null
+  checkOutLat: string | null
+  checkOutLng: string | null
   user: {
     name: string
     email: string
@@ -82,6 +95,7 @@ export function UserAttendance() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
   const [page, setPage] = useState(1)
+  const [viewPhoto, setViewPhoto] = useState<{ url: string; lat: string; lng: string; label: string } | null>(null)
   const monthOptions = getMonthOptions()
 
   const fetchRecords = useCallback(async () => {
@@ -111,6 +125,10 @@ export function UserAttendance() {
   const handleMonthChange = (value: string) => {
     setSelectedMonth(value)
     setPage(1)
+  }
+
+  const hasAnyPhoto = (record: AttendanceRecord) => {
+    return !!(record.checkInPhoto || record.checkOutPhoto)
   }
 
   return (
@@ -159,6 +177,7 @@ export function UserAttendance() {
                       <TableHead>Jam Keluar</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Durasi Kerja</TableHead>
+                      <TableHead className="hidden md:table-cell">Dokumentasi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -170,8 +189,64 @@ export function UserAttendance() {
                         <TableCell className="font-medium text-slate-900">
                           {formatDateDisplay(record.date)}
                         </TableCell>
-                        <TableCell>{record.checkIn || '-'}</TableCell>
-                        <TableCell>{record.checkOut || '-'}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <span>{record.checkIn || '-'}</span>
+                            {record.checkInPhoto && (
+                              <button
+                                type="button"
+                                onClick={() => setViewPhoto({
+                                  url: record.checkInPhoto!,
+                                  lat: record.checkInLat || '',
+                                  lng: record.checkInLng || '',
+                                  label: `Check-In - ${formatDateDisplay(record.date)}`,
+                                })}
+                                className="shrink-0"
+                              >
+                                <img
+                                  src={record.checkInPhoto}
+                                  alt="Foto masuk"
+                                  className="h-6 w-6 rounded object-cover border border-slate-200 hover:opacity-80 transition-opacity cursor-pointer"
+                                />
+                              </button>
+                            )}
+                          </div>
+                          {record.checkInLat && record.checkInLng && (
+                            <div className="flex items-center gap-0.5 text-[10px] text-slate-400 mt-0.5">
+                              <MapPin className="h-2.5 w-2.5 shrink-0" />
+                              <span>{record.checkInLat}, {record.checkInLng}</span>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <span>{record.checkOut || '-'}</span>
+                            {record.checkOutPhoto && (
+                              <button
+                                type="button"
+                                onClick={() => setViewPhoto({
+                                  url: record.checkOutPhoto!,
+                                  lat: record.checkOutLat || '',
+                                  lng: record.checkOutLng || '',
+                                  label: `Check-Out - ${formatDateDisplay(record.date)}`,
+                                })}
+                                className="shrink-0"
+                              >
+                                <img
+                                  src={record.checkOutPhoto}
+                                  alt="Foto keluar"
+                                  className="h-6 w-6 rounded object-cover border border-slate-200 hover:opacity-80 transition-opacity cursor-pointer"
+                                />
+                              </button>
+                            )}
+                          </div>
+                          {record.checkOutLat && record.checkOutLng && (
+                            <div className="flex items-center gap-0.5 text-[10px] text-slate-400 mt-0.5">
+                              <MapPin className="h-2.5 w-2.5 shrink-0" />
+                              <span>{record.checkOutLat}, {record.checkOutLng}</span>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {record.status === 'PRESENT' ? (
                             <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">
@@ -185,6 +260,48 @@ export function UserAttendance() {
                         </TableCell>
                         <TableCell className="text-slate-600">
                           {calculateDuration(record.checkIn, record.checkOut)}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {hasAnyPhoto(record) ? (
+                            <div className="flex items-center gap-1">
+                              {record.checkInPhoto && (
+                                <button
+                                  type="button"
+                                  onClick={() => setViewPhoto({
+                                    url: record.checkInPhoto!,
+                                    lat: record.checkInLat || '',
+                                    lng: record.checkInLng || '',
+                                    label: `Check-In - ${formatDateDisplay(record.date)}`,
+                                  })}
+                                >
+                                  <img
+                                    src={record.checkInPhoto}
+                                    alt="Foto masuk"
+                                    className="h-8 w-8 rounded object-cover border border-emerald-200 hover:opacity-80 transition-opacity cursor-pointer"
+                                  />
+                                </button>
+                              )}
+                              {record.checkOutPhoto && (
+                                <button
+                                  type="button"
+                                  onClick={() => setViewPhoto({
+                                    url: record.checkOutPhoto!,
+                                    lat: record.checkOutLat || '',
+                                    lng: record.checkOutLng || '',
+                                    label: `Check-Out - ${formatDateDisplay(record.date)}`,
+                                  })}
+                                >
+                                  <img
+                                    src={record.checkOutPhoto}
+                                    alt="Foto keluar"
+                                    className="h-8 w-8 rounded object-cover border border-amber-200 hover:opacity-80 transition-opacity cursor-pointer"
+                                  />
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400">Tidak ada</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -206,24 +323,58 @@ export function UserAttendance() {
                       <span className="text-sm font-medium text-slate-900">
                         {formatDateDisplay(record.date)}
                       </span>
-                      {record.status === 'PRESENT' ? (
-                        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">
-                          Hadir
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100">
-                          Terlambat
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {hasAnyPhoto(record) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              const photo = record.checkInPhoto || record.checkOutPhoto
+                              if (photo) {
+                                setViewPhoto({
+                                  url: photo,
+                                  lat: record.checkInLat || record.checkOutLat || '',
+                                  lng: record.checkInLng || record.checkOutLng || '',
+                                  label: `Dokumentasi - ${formatDateDisplay(record.date)}`,
+                                })
+                              }
+                            }}
+                          >
+                            <Camera className="h-3.5 w-3.5 text-slate-500" />
+                          </Button>
+                        )}
+                        {record.status === 'PRESENT' ? (
+                          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">
+                            Hadir
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100">
+                            Terlambat
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <span className="text-slate-400">Masuk</span>
                         <p className="font-medium text-slate-700">{record.checkIn || '-'}</p>
+                        {record.checkInLat && record.checkInLng && (
+                          <div className="flex items-center gap-0.5 text-[10px] text-slate-400">
+                            <MapPin className="h-2.5 w-2.5" />
+                            {record.checkInLat}, {record.checkInLng}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <span className="text-slate-400">Keluar</span>
                         <p className="font-medium text-slate-700">{record.checkOut || '-'}</p>
+                        {record.checkOutLat && record.checkOutLng && (
+                          <div className="flex items-center gap-0.5 text-[10px] text-slate-400">
+                            <MapPin className="h-2.5 w-2.5" />
+                            {record.checkOutLat}, {record.checkOutLng}
+                          </div>
+                        )}
                       </div>
                       <div className="col-span-2">
                         <span className="text-slate-400">Durasi</span>
@@ -269,6 +420,35 @@ export function UserAttendance() {
           )}
         </CardContent>
       </Card>
+
+      {/* Photo Preview Dialog */}
+      <Dialog open={!!viewPhoto} onOpenChange={(open) => { if (!open) setViewPhoto(null) }}>
+        <DialogContent className="sm:max-w-lg w-[calc(100%-2rem)] p-4">
+          <DialogHeader>
+            <DialogTitle>Dokumentasi {viewPhoto?.label}</DialogTitle>
+            <DialogDescription>
+              Foto dan lokasi saat {viewPhoto?.label?.toLowerCase()}
+            </DialogDescription>
+          </DialogHeader>
+          {viewPhoto && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-full max-w-sm aspect-[4/3] rounded-lg overflow-hidden border bg-muted">
+                <img
+                  src={viewPhoto.url}
+                  alt={`Foto ${viewPhoto.label?.toLowerCase()}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {viewPhoto.lat && viewPhoto.lng && (
+                <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                  <MapPin className="h-4 w-4 text-slate-500" />
+                  <span>{viewPhoto.lat}, {viewPhoto.lng}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

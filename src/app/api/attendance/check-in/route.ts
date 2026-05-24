@@ -9,6 +9,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Parse optional photo and GPS data from request body
+    let photo = '';
+    let latitude = '';
+    let longitude = '';
+    try {
+      const body = await request.json();
+      if (body.photo) photo = String(body.photo);
+      if (body.latitude) latitude = String(body.latitude);
+      if (body.longitude) longitude = String(body.longitude);
+    } catch {
+      // Body may be empty or invalid JSON – that's okay, fields stay empty
+    }
+
     const bangkokNow = getBangkokNow();
     const today = formatDate(bangkokNow);
     const checkInTime = formatTime(bangkokNow);
@@ -39,6 +52,9 @@ export async function POST(request: NextRequest) {
         date: today,
         checkIn: checkInTime,
         status,
+        checkInPhoto: photo,
+        checkInLat: latitude,
+        checkInLng: longitude,
       },
       include: {
         user: {
