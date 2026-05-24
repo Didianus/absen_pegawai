@@ -16,8 +16,8 @@ interface AuthState {
   user: User | null
   isLoading: boolean
   view: 'login' | 'register' | 'admin-dashboard' | 'user-dashboard'
-  adminTab: 'overview' | 'users' | 'attendance' | 'barang' | 'barang-masuk' | 'barang-keluar'
-  userTab: 'dashboard' | 'attendance' | 'profile'
+  adminTab: 'overview' | 'users' | 'attendance' | 'attendance-recap' | 'barang' | 'barang-masuk' | 'barang-keluar'
+  userTab: 'dashboard' | 'attendance' | 'attendance-recap' | 'profile'
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
   setView: (view: AuthState['view']) => void
@@ -113,7 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
     } finally {
-      set({ user: null, view: 'login', adminTab: 'overview', userTab: 'dashboard' })
+      set({ user: null, view: 'login', adminTab: 'overview', userTab: 'dashboard', isLoading: false })
     }
   }
 }))

@@ -13,6 +13,7 @@ import {
   Package,
   ArrowDownCircle,
   ArrowUpCircle,
+  ClipboardList,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,13 +39,15 @@ const AdminAttendance = lazy(() => import('./admin-attendance').then(m => ({ def
 const AdminBarang = lazy(() => import('./admin-barang').then(m => ({ default: m.AdminBarang })))
 const AdminBarangMasuk = lazy(() => import('./admin-barang-masuk').then(m => ({ default: m.AdminBarangMasuk })))
 const AdminBarangKeluar = lazy(() => import('./admin-barang-keluar').then(m => ({ default: m.AdminBarangKeluar })))
+const AdminAttendanceRecap = lazy(() => import('./admin-attendance-recap').then(m => ({ default: m.AdminAttendanceRecap })))
 
-type AdminTab = 'overview' | 'users' | 'attendance' | 'barang' | 'barang-masuk' | 'barang-keluar'
+type AdminTab = 'overview' | 'users' | 'attendance' | 'attendance-recap' | 'barang' | 'barang-masuk' | 'barang-keluar'
 
 const navItems = [
   { key: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
   { key: 'users' as const, label: 'Pengguna', icon: Users },
   { key: 'attendance' as const, label: 'Kehadiran', icon: CalendarCheck },
+  { key: 'attendance-recap' as const, label: 'Rekapan Kehadiran', icon: ClipboardList },
   { key: 'barang' as const, label: 'Barang', icon: Package },
   { key: 'barang-masuk' as const, label: 'Barang Masuk', icon: ArrowDownCircle },
   { key: 'barang-keluar' as const, label: 'Barang Keluar', icon: ArrowUpCircle },
@@ -54,6 +57,7 @@ const tabLabels: Record<AdminTab, string> = {
   overview: 'Dashboard',
   users: 'Manajemen Pengguna',
   attendance: 'Data Kehadiran',
+  'attendance-recap': 'Rekapan Kehadiran',
   barang: 'Manajemen Barang',
   'barang-masuk': 'Laporan Barang Masuk',
   'barang-keluar': 'Laporan Barang Keluar',
@@ -70,7 +74,7 @@ function SidebarNav({
     <nav className="flex flex-col gap-1 px-3">
       {navItems.map((item, idx) => {
         const isActive = activeTab === item.key
-        const isInventoryTab = ['barang', 'barang-masuk', 'barang-keluar'].includes(item.key)
+        const isSmallTab = ['attendance-recap', 'barang', 'barang-masuk', 'barang-keluar'].includes(item.key)
 
         return (
           <div key={item.key}>
