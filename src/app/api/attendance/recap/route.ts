@@ -17,8 +17,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Month parameter is required (YYYY-MM)' }, { status: 400 });
     }
 
-    // Get all users (admin sees all, user sees only self)
-    const userWhere: { role?: string; department?: string } = {};
     if (user.role !== 'ADMIN') {
       // For regular users, only return their own recap
       const userData = await db.user.findUnique({
@@ -29,7 +27,6 @@ export async function GET(request: NextRequest) {
           email: true,
           position: true,
           department: true,
-          role: true,
         },
       });
 
@@ -37,11 +34,17 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
-      // Get attendance records for this user for the specified month
+      // Get attendance records - ONLY the fields we need (NO photos!)
       const attendances = await db.attendance.findMany({
         where: {
           userId: user.id,
           date: { startsWith: month },
+        },
+        select: {
+          date: true,
+          checkIn: true,
+          checkOut: true,
+          status: true,
         },
         orderBy: { date: 'asc' },
       });
@@ -66,18 +69,14 @@ export async function GET(request: NextRequest) {
           lateDays,
           absentDays,
           attendanceRate,
-          details: attendances.map((a) => ({
-            date: a.date,
-            checkIn: a.checkIn,
-            checkOut: a.checkOut,
-            status: a.status,
-          })),
+          details: attendances,
         }],
         month,
       });
     }
 
     // Admin view: get all users or filter by department
+    const userWhere: { department?: string } = {};
     if (department) {
       userWhere.department = department;
     }
@@ -90,12 +89,11 @@ export async function GET(request: NextRequest) {
         email: true,
         position: true,
         department: true,
-        role: true,
       },
       orderBy: { name: 'asc' },
     });
 
-    // Get all attendance records for the month
+    // Get attendance records for the month - ONLY needed fields (NO photos!)
     const attendances = await db.attendance.findMany({
       where: {
         date: { startsWith: month },
@@ -103,10 +101,12 @@ export async function GET(request: NextRequest) {
           user: { department },
         } : {}),
       },
-      include: {
-        user: {
-          select: { id: true },
-        },
+      select: {
+        userId: true,
+        date: true,
+        checkIn: true,
+        checkOut: true,
+        status: true,
       },
     });
 
@@ -173,20 +173,18 @@ export async function GET(request: NextRequest) {
 // Calculate working days in a month (Mon-Fri)
 function getWorkingDaysInMonth(monthStr: string): number {
   const [year, month] = monthStr.split('-').map(Number);
-  const date = new Date(year, month - 1, 1);
   const now = new Date();
 
-  // If the month is the current month or future, cap at today
-  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
+  const isCurrentMonth = year === now.getFullYear() && month === (now.getMonth() + 1);
   const lastDay = isCurrentMonth
     ? now.getDate()
-    : new Date(year, month, 0).getDate(); // Last day of month
+    : new Date(year, month, 0).getDate();
 
   let workingDays = 0;
   for (let day = 1; day <= lastDay; day++) {
-    date.setDate(day);
-    const dayOfWeek = date.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday (0) or Saturday (6)
+    const d = new Date(year, month - 1, day);
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
       workingDays++;
     }
   }
