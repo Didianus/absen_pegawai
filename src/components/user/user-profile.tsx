@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useAuthStore, type User } from '@/lib/auth-store'
+import { useAuthStore, type User as UserType } from '@/lib/auth-store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,7 +86,7 @@ export function UserProfile() {
         setEditMode(false)
         setMessage({ type: 'success', text: 'Profil berhasil diperbarui' })
         // Update auth store
-        const updatedUser: User = {
+        const updatedUser: UserType = {
           id: data.id,
           name: data.name,
           email: data.email,
