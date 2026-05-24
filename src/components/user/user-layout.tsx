@@ -20,9 +20,12 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
-import { UserDashboard } from './user-dashboard'
-import { UserAttendance } from './user-attendance'
-import { UserProfile } from './user-profile'
+import { lazy, Suspense } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const UserDashboard = lazy(() => import('./user-dashboard').then(m => ({ default: m.UserDashboard })))
+const UserAttendance = lazy(() => import('./user-attendance').then(m => ({ default: m.UserAttendance })))
+const UserProfile = lazy(() => import('./user-profile').then(m => ({ default: m.UserProfile })))
 
 const navItems = [
   { key: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
@@ -179,17 +182,24 @@ export function UserLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={userTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-            >
-              {renderContent()}
-            </motion.div>
-          </AnimatePresence>
+          <Suspense fallback={
+            <div className="space-y-6 p-4">
+              <Skeleton className="h-32 w-full rounded-xl" />
+              <Skeleton className="h-48 w-full rounded-xl" />
+            </div>
+          }>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={userTab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
+                {renderContent()}
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </main>
       </div>
     </div>

@@ -16,7 +16,7 @@ interface AuthState {
   user: User | null
   isLoading: boolean
   view: 'login' | 'register' | 'admin-dashboard' | 'user-dashboard'
-  adminTab: 'overview' | 'users' | 'attendance'
+  adminTab: 'overview' | 'users' | 'attendance' | 'barang' | 'barang-masuk' | 'barang-keluar'
   userTab: 'dashboard' | 'attendance' | 'profile'
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void

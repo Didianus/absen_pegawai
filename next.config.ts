@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  allowedDevOrigins: [
+    '.space-z.ai',
+  ],
 };
 
 export default nextConfig;

@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, type FormEvent } from 'react'
 import { useAuthStore, type User } from '@/lib/auth-store'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface UserRow extends Omit<User, 'createdAt' | 'updatedAt'> {
   createdAt?: string
@@ -72,6 +73,7 @@ const PAGE_SIZE = 10
 
 export function AdminUsers() {
   const { user: currentUser } = useAuthStore()
+  const { toast } = useToast()
   const [users, setUsers] = useState<UserRow[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -104,7 +106,6 @@ export function AdminUsers() {
     fetchUsers()
   }, [fetchUsers])
 
-  // Filter users by search
   const filtered = users.filter((u) => {
     const q = search.toLowerCase()
     return (
@@ -118,7 +119,6 @@ export function AdminUsers() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  // Reset page when search changes
   useEffect(() => {
     setPage(1)
   }, [search])
@@ -149,7 +149,12 @@ export function AdminUsers() {
     setDeleteOpen(true)
   }
 
-  const submitAdd = async () => {
+  const submitAdd = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
+      setFormError('Nama, email, dan password wajib diisi')
+      return
+    }
     setSubmitting(true)
     setFormError(null)
     try {
@@ -165,6 +170,7 @@ export function AdminUsers() {
       }
       setAddOpen(false)
       await fetchUsers()
+      toast({ title: 'Berhasil', description: 'Pengguna berhasil ditambahkan' })
     } catch {
       setFormError('Terjadi kesalahan jaringan')
     } finally {
@@ -172,8 +178,13 @@ export function AdminUsers() {
     }
   }
 
-  const submitEdit = async () => {
+  const submitEdit = async (e: FormEvent) => {
+    e.preventDefault()
     if (!selectedUser) return
+    if (!form.name.trim() || !form.email.trim()) {
+      setFormError('Nama dan email wajib diisi')
+      return
+    }
     setSubmitting(true)
     setFormError(null)
     try {
@@ -200,6 +211,7 @@ export function AdminUsers() {
       }
       setEditOpen(false)
       await fetchUsers()
+      toast({ title: 'Berhasil', description: 'Data pengguna berhasil diperbarui' })
     } catch {
       setFormError('Terjadi kesalahan jaringan')
     } finally {
@@ -216,114 +228,18 @@ export function AdminUsers() {
       })
       if (!res.ok) {
         const data = await res.json()
-        alert(data.error || 'Gagal menghapus pengguna')
+        toast({ title: 'Gagal', description: data.error || 'Gagal menghapus pengguna', variant: 'destructive' })
         return
       }
       setDeleteOpen(false)
       await fetchUsers()
+      toast({ title: 'Berhasil', description: 'Pengguna berhasil dihapus' })
     } catch {
-      alert('Terjadi kesalahan jaringan')
+      toast({ title: 'Gagal', description: 'Terjadi kesalahan jaringan', variant: 'destructive' })
     } finally {
       setSubmitting(false)
     }
   }
-
-  const UserForm = ({ mode }: { mode: 'add' | 'edit' }) => (
-    <div className="grid gap-4 py-2">
-      {formError && (
-        <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-          {formError}
-        </div>
-      )}
-      <div className="grid gap-2">
-        <Label htmlFor={`${mode}-name`}>Nama</Label>
-        <Input
-          id={`${mode}-name`}
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder="Nama lengkap"
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor={`${mode}-email`}>Email</Label>
-        <Input
-          id={`${mode}-email`}
-          type="email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          placeholder="email@contoh.com"
-        />
-      </div>
-      {mode === 'add' && (
-        <div className="grid gap-2">
-          <Label htmlFor={`${mode}-password`}>Password</Label>
-          <Input
-            id={`${mode}-password`}
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            placeholder="Minimal 6 karakter"
-          />
-        </div>
-      )}
-      {mode === 'edit' && (
-        <div className="grid gap-2">
-          <Label htmlFor={`${mode}-password`}>Password Baru (opsional)</Label>
-          <Input
-            id={`${mode}-password`}
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            placeholder="Kosongkan jika tidak ingin mengubah"
-          />
-        </div>
-      )}
-      <div className="grid gap-2">
-        <Label htmlFor={`${mode}-role`}>Role</Label>
-        <Select
-          value={form.role}
-          onValueChange={(value) => setForm({ ...form, role: value })}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Pilih role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="USER">User</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor={`${mode}-position`}>Jabatan</Label>
-          <Input
-            id={`${mode}-position`}
-            value={form.position}
-            onChange={(e) => setForm({ ...form, position: e.target.value })}
-            placeholder="Jabatan"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor={`${mode}-department`}>Departemen</Label>
-          <Input
-            id={`${mode}-department`}
-            value={form.department}
-            onChange={(e) => setForm({ ...form, department: e.target.value })}
-            placeholder="Departemen"
-          />
-        </div>
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor={`${mode}-phone`}>No. Telepon</Label>
-        <Input
-          id={`${mode}-phone`}
-          value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          placeholder="08xxxxxxxxxx"
-        />
-      </div>
-    </div>
-  )
 
   return (
     <div className="space-y-4">
@@ -480,15 +396,99 @@ export function AdminUsers() {
               Isi data berikut untuk menambahkan pengguna baru.
             </DialogDescription>
           </DialogHeader>
-          <UserForm mode="add" />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={submitting}>
-              Batal
-            </Button>
-            <Button onClick={submitAdd} disabled={submitting}>
-              {submitting ? 'Menyimpan...' : 'Simpan'}
-            </Button>
-          </DialogFooter>
+          <form onSubmit={submitAdd} className="grid gap-4 py-2">
+            {formError && (
+              <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                {formError}
+              </div>
+            )}
+            <div className="grid gap-2">
+              <Label htmlFor="add-name">Nama</Label>
+              <Input
+                id="add-name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Nama lengkap"
+                autoFocus
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-email">Email</Label>
+              <Input
+                id="add-email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="email@contoh.com"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-password">Password</Label>
+              <Input
+                id="add-password"
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="Minimal 6 karakter"
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-role">Role</Label>
+              <Select
+                value={form.role}
+                onValueChange={(value) => setForm({ ...form, role: value })}
+              >
+                <SelectTrigger id="add-role" className="w-full">
+                  <SelectValue placeholder="Pilih role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="add-position">Jabatan</Label>
+                <Input
+                  id="add-position"
+                  value={form.position}
+                  onChange={(e) => setForm({ ...form, position: e.target.value })}
+                  placeholder="Jabatan"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="add-department">Departemen</Label>
+                <Input
+                  id="add-department"
+                  value={form.department}
+                  onChange={(e) => setForm({ ...form, department: e.target.value })}
+                  placeholder="Departemen"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-phone">No. Telepon</Label>
+              <Input
+                id="add-phone"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="08xxxxxxxxxx"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddOpen(false)} disabled={submitting}>
+                Batal
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -501,15 +501,98 @@ export function AdminUsers() {
               Perbarui data pengguna berikut.
             </DialogDescription>
           </DialogHeader>
-          <UserForm mode="edit" />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={submitting}>
-              Batal
-            </Button>
-            <Button onClick={submitEdit} disabled={submitting}>
-              {submitting ? 'Menyimpan...' : 'Perbarui'}
-            </Button>
-          </DialogFooter>
+          <form onSubmit={submitEdit} className="grid gap-4 py-2">
+            {formError && (
+              <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                {formError}
+              </div>
+            )}
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Nama</Label>
+              <Input
+                id="edit-name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Nama lengkap"
+                autoFocus
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="email@contoh.com"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-password">Password Baru (opsional)</Label>
+              <Input
+                id="edit-password"
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="Kosongkan jika tidak ingin mengubah"
+                minLength={6}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-role">Role</Label>
+              <Select
+                value={form.role}
+                onValueChange={(value) => setForm({ ...form, role: value })}
+              >
+                <SelectTrigger id="edit-role" className="w-full">
+                  <SelectValue placeholder="Pilih role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-position">Jabatan</Label>
+                <Input
+                  id="edit-position"
+                  value={form.position}
+                  onChange={(e) => setForm({ ...form, position: e.target.value })}
+                  placeholder="Jabatan"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-department">Departemen</Label>
+                <Input
+                  id="edit-department"
+                  value={form.department}
+                  onChange={(e) => setForm({ ...form, department: e.target.value })}
+                  placeholder="Departemen"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-phone">No. Telepon</Label>
+              <Input
+                id="edit-phone"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="08xxxxxxxxxx"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)} disabled={submitting}>
+                Batal
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Menyimpan...' : 'Perbarui'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

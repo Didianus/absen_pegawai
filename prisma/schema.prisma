@@ -19,7 +19,9 @@ model User {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  attendances Attendance[]
+  attendances    Attendance[]
+  barangMasuk    BarangMasuk[]
+  barangKeluar   BarangKeluar[]
 }
 
 model Attendance {
@@ -42,4 +44,48 @@ model Attendance {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date]) // One attendance record per user per day
+}
+
+model Barang {
+  id         String   @id @default(cuid())
+  kode       String   @unique // Item code/SKU
+  nama       String   // Item name
+  kategori   String   @default("") // Category
+  satuan     String   @default("") // Unit (pcs, kg, box, etc.)
+  stok       Int      @default(0) // Current stock
+  deskripsi  String   @default("") // Description
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  barangMasuk  BarangMasuk[]
+  barangKeluar BarangKeluar[]
+}
+
+model BarangMasuk {
+  id         String   @id @default(cuid())
+  barangId   String
+  jumlah     Int      // Quantity received
+  tanggal    String   // YYYY-MM-DD
+  keterangan String   @default("") // Notes/reason
+  penerimaId String   // User who received
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  barang  Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
+  penerima User  @relation(fields: [penerimaId], references: [id], onDelete: Cascade)
+}
+
+model BarangKeluar {
+  id           String   @id @default(cuid())
+  barangId     String
+  jumlah       Int      // Quantity issued
+  tanggal      String   // YYYY-MM-DD
+  keterangan   String   @default("") // Notes/reason
+  pengeluarId  String   // User who issued
+  penerimaNama String   @default("") // Recipient name (who receives the goods)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  barang    Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
+  pengeluar User   @relation(fields: [pengeluarId], references: [id], onDelete: Cascade)
 }

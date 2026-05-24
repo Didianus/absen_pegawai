@@ -10,6 +10,9 @@ import {
   Menu,
   LogOut,
   UserCircle,
+  Package,
+  ArrowDownCircle,
+  ArrowUpCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,17 +29,35 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
-import { AdminOverview } from './admin-overview'
-import { AdminUsers } from './admin-users'
-import { AdminAttendance } from './admin-attendance'
+import { lazy, Suspense } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const AdminOverview = lazy(() => import('./admin-overview').then(m => ({ default: m.AdminOverview })))
+const AdminUsers = lazy(() => import('./admin-users').then(m => ({ default: m.AdminUsers })))
+const AdminAttendance = lazy(() => import('./admin-attendance').then(m => ({ default: m.AdminAttendance })))
+const AdminBarang = lazy(() => import('./admin-barang').then(m => ({ default: m.AdminBarang })))
+const AdminBarangMasuk = lazy(() => import('./admin-barang-masuk').then(m => ({ default: m.AdminBarangMasuk })))
+const AdminBarangKeluar = lazy(() => import('./admin-barang-keluar').then(m => ({ default: m.AdminBarangKeluar })))
+
+type AdminTab = 'overview' | 'users' | 'attendance' | 'barang' | 'barang-masuk' | 'barang-keluar'
 
 const navItems = [
   { key: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
   { key: 'users' as const, label: 'Pengguna', icon: Users },
   { key: 'attendance' as const, label: 'Kehadiran', icon: CalendarCheck },
+  { key: 'barang' as const, label: 'Barang', icon: Package },
+  { key: 'barang-masuk' as const, label: 'Barang Masuk', icon: ArrowDownCircle },
+  { key: 'barang-keluar' as const, label: 'Barang Keluar', icon: ArrowUpCircle },
 ]
 
-type AdminTab = 'overview' | 'users' | 'attendance'
+const tabLabels: Record<AdminTab, string> = {
+  overview: 'Dashboard',
+  users: 'Manajemen Pengguna',
+  attendance: 'Data Kehadiran',
+  barang: 'Manajemen Barang',
+  'barang-masuk': 'Laporan Barang Masuk',
+  'barang-keluar': 'Laporan Barang Keluar',
+}
 
 function SidebarNav({
   activeTab,
@@ -47,21 +68,31 @@ function SidebarNav({
 }) {
   return (
     <nav className="flex flex-col gap-1 px-3">
-      {navItems.map((item) => {
+      {navItems.map((item, idx) => {
         const isActive = activeTab === item.key
+        const isInventoryTab = ['barang', 'barang-masuk', 'barang-keluar'].includes(item.key)
+
         return (
-          <button
-            key={item.key}
-            onClick={() => onNavClick(item.key)}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-              isActive
-                ? 'bg-slate-700/50 text-white border-l-2 border-emerald-400 pl-[10px]'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white border-l-2 border-transparent pl-[10px]'
-            }`}
-          >
-            <item.icon className="h-5 w-5 shrink-0" />
-            <span>{item.label}</span>
-          </button>
+          <div key={item.key}>
+            {idx === 3 && (
+              <div className="px-3 pt-3 pb-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  Inventaris
+                </span>
+              </div>
+            )}
+            <button
+              onClick={() => onNavClick(item.key)}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 w-full ${
+                isActive
+                  ? 'bg-slate-700/50 text-white border-l-2 border-emerald-400 pl-[10px]'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white border-l-2 border-transparent pl-[10px]'
+              } ${isInventoryTab ? 'text-[13px]' : ''}`}
+            >
+              <item.icon className={`h-5 w-5 shrink-0 ${isInventoryTab ? 'h-4 w-4' : ''}`} />
+              <span>{item.label}</span>
+            </button>
+          </div>
         )
       })}
     </nav>
@@ -85,6 +116,12 @@ export function AdminLayout() {
         return <AdminUsers />
       case 'attendance':
         return <AdminAttendance />
+      case 'barang':
+        return <AdminBarang />
+      case 'barang-masuk':
+        return <AdminBarangMasuk />
+      case 'barang-keluar':
+        return <AdminBarangKeluar />
       default:
         return <AdminOverview />
     }
@@ -149,8 +186,8 @@ export function AdminLayout() {
 
             {/* Desktop breadcrumb */}
             <div className="hidden md:block">
-              <h2 className="text-lg font-semibold text-slate-900 capitalize">
-                {adminTab === 'overview' ? 'Dashboard' : adminTab === 'users' ? 'Manajemen Pengguna' : 'Data Kehadiran'}
+              <h2 className="text-lg font-semibold text-slate-900">
+                {tabLabels[adminTab as AdminTab] || 'Dashboard'}
               </h2>
             </div>
           </div>
@@ -187,17 +224,24 @@ export function AdminLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={adminTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-            >
-              {renderContent()}
-            </motion.div>
-          </AnimatePresence>
+          <Suspense fallback={
+            <div className="space-y-6 p-4">
+              <Skeleton className="h-32 w-full rounded-xl" />
+              <Skeleton className="h-48 w-full rounded-xl" />
+            </div>
+          }>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={adminTab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
+                {renderContent()}
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </main>
       </div>
     </div>

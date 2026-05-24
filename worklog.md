@@ -236,3 +236,36 @@ Stage Summary:
 - All API endpoints verified working
 - Login credentials: admin@test.com/admin123, user@test.com/user123
 - Camera and GPS features already implemented and working
+
+---
+Task ID: 8
+Agent: Main
+Task: Add Barang Masuk/Keluar features and fix Admin Add User form
+
+Work Log:
+- Fixed admin Add User form: replaced onClick with proper form onSubmit, added autoFocus, HTML validation (required, minLength), Tab navigation works properly between fields, added toast notifications
+- Added Barang model to Prisma schema (id, kode, nama, kategori, satuan, stok, deskripsi)
+- Added BarangMasuk model (id, barangId, jumlah, tanggal, keterangan, penerimaId)
+- Added BarangKeluar model (id, barangId, jumlah, tanggal, keterangan, pengeluarId, penerimaNama)
+- Updated User model with new relations (barangMasuk, barangKeluar)
+- Ran prisma db push and prisma generate successfully
+- Created API routes: /api/barang (GET, POST), /api/barang/[id] (PUT, DELETE), /api/barang-masuk (GET, POST), /api/barang-keluar (GET, POST)
+- Barang Masuk API auto-increments stock on creation
+- Barang Keluar API auto-decrements stock and checks if stock is sufficient
+- Created admin-barang.tsx: full CRUD with search, pagination, stock color indicators
+- Created admin-barang-masuk.tsx: incoming goods report with stats cards, date filter, add dialog with barang selector
+- Created admin-barang-keluar.tsx: outgoing goods report with stats cards, date filter, add dialog with barang selector and penerima name
+- Updated admin-layout.tsx: added 3 new sidebar items (Barang, Barang Masuk, Barang Keluar) under "Inventaris" section header, lazy-loaded all admin components
+- Updated user-layout.tsx: lazy-loaded all user components
+- Updated page.tsx: lazy-loaded all view components for better memory management
+- Updated auth-store.ts: expanded adminTab type to include 'barang' | 'barang-masuk' | 'barang-keluar'
+- Updated next.config.ts: added allowedDevOrigins for .space-z.ai
+- Lint passes cleanly
+- All APIs tested and working (login, create barang, create barang masuk, create barang keluar)
+
+Stage Summary:
+- Full barang management feature complete: CRUD items, incoming/outgoing goods reports
+- Admin sidebar now has 6 tabs: Overview, Pengguna, Kehadiran, Barang, Barang Masuk, Barang Keluar
+- Admin Add User form fixed with proper form submission, autoFocus, and validation
+- Lazy loading applied to all page components to reduce initial memory usage
+- All API endpoints verified working
