@@ -10,6 +10,7 @@ import {
   Menu,
   LogOut,
   CalendarCheck,
+  ClipboardList,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,47 +26,60 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 const UserDashboard = lazy(() => import('./user-dashboard').then(m => ({ default: m.UserDashboard })))
 const UserAttendance = lazy(() => import('./user-attendance').then(m => ({ default: m.UserAttendance })))
+const UserAttendanceRecap = lazy(() => import('./user-attendance-recap').then(m => ({ default: m.UserAttendanceRecap })))
 const UserProfile = lazy(() => import('./user-profile').then(m => ({ default: m.UserProfile })))
+
+type UserTab = 'dashboard' | 'attendance' | 'attendance-recap' | 'profile'
 
 const navItems = [
   { key: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
   { key: 'attendance' as const, label: 'Kehadiran Saya', icon: Calendar },
+  { key: 'attendance-recap' as const, label: 'Rekapan Kehadiran', icon: ClipboardList },
   { key: 'profile' as const, label: 'Profil', icon: UserCircle },
 ]
 
-const tabLabels: Record<typeof navItems[number]['key'], string> = {
+const tabLabels: Record<UserTab, string> = {
   dashboard: 'Dashboard',
   attendance: 'Kehadiran Saya',
+  'attendance-recap': 'Rekapan Kehadiran',
   profile: 'Profil',
 }
 
 interface SidebarNavProps {
   activeTab: string
-  onNavClick: (tab: 'dashboard' | 'attendance' | 'profile') => void
+  onNavClick: (tab: UserTab) => void
   onItemClick?: () => void
 }
 
 function SidebarNav({ activeTab, onNavClick, onItemClick }: SidebarNavProps) {
   return (
     <nav className="flex flex-col gap-1 px-3">
-      {navItems.map((item) => {
+      {navItems.map((item, idx) => {
         const isActive = activeTab === item.key
         return (
-          <button
-            key={item.key}
-            onClick={() => {
-              onNavClick(item.key)
-              onItemClick?.()
-            }}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-              isActive
-                ? 'bg-emerald-50 text-emerald-700 border-l-[3px] border-emerald-500 pl-[9px]'
-                : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-l-[3px] border-transparent pl-[9px]'
-            }`}
-          >
-            <item.icon className="h-5 w-5 shrink-0" />
-            <span>{item.label}</span>
-          </button>
+          <div key={item.key}>
+            {idx === 2 && (
+              <div className="px-3 pt-3 pb-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  Laporan
+                </span>
+              </div>
+            )}
+            <button
+              onClick={() => {
+                onNavClick(item.key)
+                onItemClick?.()
+              }}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? 'bg-emerald-50 text-emerald-700 border-l-[3px] border-emerald-500 pl-[9px]'
+                  : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-l-[3px] border-transparent pl-[9px]'
+              }`}
+            >
+              <item.icon className="h-5 w-5 shrink-0" />
+              <span>{item.label}</span>
+            </button>
+          </div>
         )
       })}
     </nav>
@@ -76,7 +90,7 @@ export function UserLayout() {
   const { user, userTab, setUserTab, logout } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const handleNavClick = (tab: typeof userTab) => {
+  const handleNavClick = (tab: UserTab) => {
     setUserTab(tab)
     setMobileOpen(false)
   }
@@ -87,6 +101,8 @@ export function UserLayout() {
         return <UserDashboard />
       case 'attendance':
         return <UserAttendance />
+      case 'attendance-recap':
+        return <UserAttendanceRecap />
       case 'profile':
         return <UserProfile />
       default:
@@ -158,7 +174,7 @@ export function UserLayout() {
             {/* Desktop title */}
             <div className="hidden md:block">
               <h2 className="text-lg font-semibold text-slate-900">
-                {tabLabels[userTab]}
+                {tabLabels[userTab as UserTab] || 'Dashboard'}
               </h2>
             </div>
           </div>

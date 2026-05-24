@@ -36,10 +36,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 const AdminOverview = lazy(() => import('./admin-overview').then(m => ({ default: m.AdminOverview })))
 const AdminUsers = lazy(() => import('./admin-users').then(m => ({ default: m.AdminUsers })))
 const AdminAttendance = lazy(() => import('./admin-attendance').then(m => ({ default: m.AdminAttendance })))
+const AdminAttendanceRecap = lazy(() => import('./admin-attendance-recap').then(m => ({ default: m.AdminAttendanceRecap })))
 const AdminBarang = lazy(() => import('./admin-barang').then(m => ({ default: m.AdminBarang })))
 const AdminBarangMasuk = lazy(() => import('./admin-barang-masuk').then(m => ({ default: m.AdminBarangMasuk })))
 const AdminBarangKeluar = lazy(() => import('./admin-barang-keluar').then(m => ({ default: m.AdminBarangKeluar })))
-const AdminAttendanceRecap = lazy(() => import('./admin-attendance-recap').then(m => ({ default: m.AdminAttendanceRecap })))
 
 type AdminTab = 'overview' | 'users' | 'attendance' | 'attendance-recap' | 'barang' | 'barang-masuk' | 'barang-keluar'
 
@@ -81,6 +81,13 @@ function SidebarNav({
             {idx === 3 && (
               <div className="px-3 pt-3 pb-1">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  Laporan
+                </span>
+              </div>
+            )}
+            {idx === 4 && (
+              <div className="px-3 pt-2 pb-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                   Inventaris
                 </span>
               </div>
@@ -91,9 +98,9 @@ function SidebarNav({
                 isActive
                   ? 'bg-slate-700/50 text-white border-l-2 border-emerald-400 pl-[10px]'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white border-l-2 border-transparent pl-[10px]'
-              } ${isInventoryTab ? 'text-[13px]' : ''}`}
+              } ${isSmallTab ? 'text-[13px]' : ''}`}
             >
-              <item.icon className={`h-5 w-5 shrink-0 ${isInventoryTab ? 'h-4 w-4' : ''}`} />
+              <item.icon className={`h-5 w-5 shrink-0 ${isSmallTab ? 'h-4 w-4' : ''}`} />
               <span>{item.label}</span>
             </button>
           </div>
@@ -120,6 +127,8 @@ export function AdminLayout() {
         return <AdminUsers />
       case 'attendance':
         return <AdminAttendance />
+      case 'attendance-recap':
+        return <AdminAttendanceRecap />
       case 'barang':
         return <AdminBarang />
       case 'barang-masuk':
