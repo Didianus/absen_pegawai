@@ -15,7 +15,7 @@ while true; do
     # Check if port 3000 is in use
     if ! ss -tlnp 2>/dev/null | grep -q ":3000 "; then
         echo "[$(date)] Starting Next.js server..." >> /tmp/next-daemon-status.log
-        NODE_OPTIONS="--max-old-space-size=256" npx next start -p 3000 >> /tmp/next-server.log 2>&1 &
+        NODE_OPTIONS="--max-old-space-size=256" node .next/standalone/server.js >> /tmp/next-server.log 2>&1 &
         SERVER_PID=$!
         echo $SERVER_PID > "$PIDFILE"
         echo "[$(date)] Server started with PID $SERVER_PID" >> /tmp/next-daemon-status.log
