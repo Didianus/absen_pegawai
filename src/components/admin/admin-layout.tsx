@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useAuthStore } from '@/lib/auth-store'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from "react";
+import { useAuthStore } from "@/lib/auth-store";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -14,67 +14,109 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   ClipboardList,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Separator } from '@/components/ui/separator'
-import { lazy, Suspense } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { lazy, Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const AdminOverview = lazy(() => import('./admin-overview').then(m => ({ default: m.AdminOverview })))
-const AdminUsers = lazy(() => import('./admin-users').then(m => ({ default: m.AdminUsers })))
-const AdminAttendance = lazy(() => import('./admin-attendance').then(m => ({ default: m.AdminAttendance })))
-const AdminAttendanceRecap = lazy(() => import('./admin-attendance-recap').then(m => ({ default: m.AdminAttendanceRecap })))
-const AdminBarang = lazy(() => import('./admin-barang').then(m => ({ default: m.AdminBarang })))
-const AdminBarangMasuk = lazy(() => import('./admin-barang-masuk').then(m => ({ default: m.AdminBarangMasuk })))
-const AdminBarangKeluar = lazy(() => import('./admin-barang-keluar').then(m => ({ default: m.AdminBarangKeluar })))
+const AdminOverview = lazy(() =>
+  import("./admin-overview").then((m) => ({ default: m.AdminOverview })),
+);
+const AdminUsers = lazy(() =>
+  import("./admin-users").then((m) => ({ default: m.AdminUsers })),
+);
+const AdminAttendance = lazy(() =>
+  import("./admin-attendance").then((m) => ({ default: m.AdminAttendance })),
+);
+const AdminAttendanceRecap = lazy(() =>
+  import("./admin-attendance-recap").then((m) => ({
+    default: m.AdminAttendanceRecap,
+  })),
+);
+const AdminBarang = lazy(() =>
+  import("./admin-barang").then((m) => ({ default: m.AdminBarang })),
+);
+const AdminBarangMasuk = lazy(() =>
+  import("./admin-barang-masuk").then((m) => ({ default: m.AdminBarangMasuk })),
+);
+const AdminBarangKeluar = lazy(() =>
+  import("./admin-barang-keluar").then((m) => ({
+    default: m.AdminBarangKeluar,
+  })),
+);
 
-type AdminTab = 'overview' | 'users' | 'attendance' | 'attendance-recap' | 'barang' | 'barang-masuk' | 'barang-keluar'
+type AdminTab =
+  | "overview"
+  | "users"
+  | "attendance"
+  | "attendance-recap"
+  | "barang"
+  | "barang-masuk"
+  | "barang-keluar";
 
 const navItems = [
-  { key: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
-  { key: 'users' as const, label: 'Pengguna', icon: Users },
-  { key: 'attendance' as const, label: 'Kehadiran', icon: CalendarCheck },
-  { key: 'attendance-recap' as const, label: 'Rekapan Kehadiran', icon: ClipboardList },
-  { key: 'barang' as const, label: 'Barang', icon: Package },
-  { key: 'barang-masuk' as const, label: 'Barang Masuk', icon: ArrowDownCircle },
-  { key: 'barang-keluar' as const, label: 'Barang Keluar', icon: ArrowUpCircle },
-]
+  { key: "overview" as const, label: "Overview", icon: LayoutDashboard },
+  { key: "users" as const, label: "Pengguna", icon: Users },
+  { key: "attendance" as const, label: "Kehadiran", icon: CalendarCheck },
+  {
+    key: "attendance-recap" as const,
+    label: "Rekapan Kehadiran",
+    icon: ClipboardList,
+  },
+  { key: "barang" as const, label: "Barang", icon: Package },
+  {
+    key: "barang-masuk" as const,
+    label: "Barang Masuk",
+    icon: ArrowDownCircle,
+  },
+  {
+    key: "barang-keluar" as const,
+    label: "Barang Keluar",
+    icon: ArrowUpCircle,
+  },
+];
 
 const tabLabels: Record<AdminTab, string> = {
-  overview: 'Dashboard',
-  users: 'Manajemen Pengguna',
-  attendance: 'Data Kehadiran',
-  'attendance-recap': 'Rekapan Kehadiran',
-  barang: 'Manajemen Barang',
-  'barang-masuk': 'Laporan Barang Masuk',
-  'barang-keluar': 'Laporan Barang Keluar',
-}
+  overview: "Dashboard",
+  users: "Manajemen Pengguna",
+  attendance: "Data Kehadiran",
+  "attendance-recap": "Rekapan Kehadiran",
+  barang: "Manajemen Barang",
+  "barang-masuk": "Laporan Barang Masuk",
+  "barang-keluar": "Laporan Barang Keluar",
+};
 
 function SidebarNav({
   activeTab,
   onNavClick,
 }: {
-  activeTab: AdminTab
-  onNavClick: (tab: AdminTab) => void
+  activeTab: AdminTab;
+  onNavClick: (tab: AdminTab) => void;
 }) {
   return (
     <nav className="flex flex-col gap-1 px-3">
       {navItems.map((item, idx) => {
-        const isActive = activeTab === item.key
-        const isSmallTab = ['attendance-recap', 'barang', 'barang-masuk', 'barang-keluar'].includes(item.key)
+        const isActive = activeTab === item.key;
+        const isSmallTab = [
+          "attendance-recap",
+          "barang",
+          "barang-masuk",
+          "barang-keluar",
+        ].includes(item.key);
 
         return (
           <div key={item.key}>
@@ -96,49 +138,51 @@ function SidebarNav({
               onClick={() => onNavClick(item.key)}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 w-full ${
                 isActive
-                  ? 'bg-slate-700/50 text-white border-l-2 border-emerald-400 pl-[10px]'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white border-l-2 border-transparent pl-[10px]'
-              } ${isSmallTab ? 'text-[13px]' : ''}`}
+                  ? "bg-slate-700/50 text-white border-l-2 border-emerald-400 pl-[10px]"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white border-l-2 border-transparent pl-[10px]"
+              } ${isSmallTab ? "text-[13px]" : ""}`}
             >
-              <item.icon className={`h-5 w-5 shrink-0 ${isSmallTab ? 'h-4 w-4' : ''}`} />
+              <item.icon
+                className={`h-5 w-5 shrink-0 ${isSmallTab ? "h-4 w-4" : ""}`}
+              />
               <span>{item.label}</span>
             </button>
           </div>
-        )
+        );
       })}
     </nav>
-  )
+  );
 }
 
 export function AdminLayout() {
-  const { user, adminTab, setAdminTab, logout } = useAuthStore()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const { user, adminTab, setAdminTab, logout } = useAuthStore();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleNavClick = (tab: AdminTab) => {
-    setAdminTab(tab)
-    setMobileOpen(false)
-  }
+    setAdminTab(tab);
+    setMobileOpen(false);
+  };
 
   const renderContent = () => {
     switch (adminTab) {
-      case 'overview':
-        return <AdminOverview />
-      case 'users':
-        return <AdminUsers />
-      case 'attendance':
-        return <AdminAttendance />
-      case 'attendance-recap':
-        return <AdminAttendanceRecap />
-      case 'barang':
-        return <AdminBarang />
-      case 'barang-masuk':
-        return <AdminBarangMasuk />
-      case 'barang-keluar':
-        return <AdminBarangKeluar />
+      case "overview":
+        return <AdminOverview />;
+      case "users":
+        return <AdminUsers />;
+      case "attendance":
+        return <AdminAttendance />;
+      case "attendance-recap":
+        return <AdminAttendanceRecap />;
+      case "barang":
+        return <AdminBarang />;
+      case "barang-masuk":
+        return <AdminBarangMasuk />;
+      case "barang-keluar":
+        return <AdminBarangKeluar />;
       default:
-        return <AdminOverview />
+        return <AdminOverview />;
     }
-  }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -147,7 +191,7 @@ export function AdminLayout() {
         {/* Brand */}
         <div className="flex h-16 items-center gap-2 px-6">
           <CalendarCheck className="h-7 w-7 text-emerald-400" />
-          <span className="text-xl font-bold tracking-tight">AttendEase</span>
+          <span className="text-xl font-bold tracking-tight">AbsenKerja</span>
         </div>
         <Separator className="bg-slate-700" />
         <div className="flex-1 overflow-y-auto py-4">
@@ -158,7 +202,9 @@ export function AdminLayout() {
           <div className="flex items-center gap-3 rounded-lg bg-slate-800 px-3 py-2.5">
             <UserCircle className="h-8 w-8 text-slate-400" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+              <p className="text-sm font-medium text-white truncate">
+                {user?.name}
+              </p>
               <p className="text-xs text-slate-400 truncate">{user?.email}</p>
             </div>
           </div>
@@ -178,15 +224,21 @@ export function AdminLayout() {
                   <span className="sr-only">Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-64 bg-slate-900 text-white p-0 border-slate-700">
+              <SheetContent
+                side="left"
+                className="w-64 bg-slate-900 text-white p-0 border-slate-700"
+              >
                 <SheetHeader className="px-6 pt-6 pb-0">
                   <SheetTitle className="text-white flex items-center gap-2">
                     <CalendarCheck className="h-6 w-6 text-emerald-400" />
-                    AttendEase
+                    AbsenKerja
                   </SheetTitle>
                 </SheetHeader>
                 <div className="py-4">
-                  <SidebarNav activeTab={adminTab} onNavClick={handleNavClick} />
+                  <SidebarNav
+                    activeTab={adminTab}
+                    onNavClick={handleNavClick}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
@@ -194,13 +246,15 @@ export function AdminLayout() {
             {/* Mobile brand */}
             <div className="flex items-center gap-2 md:hidden">
               <CalendarCheck className="h-6 w-6 text-emerald-600" />
-              <span className="text-lg font-bold text-slate-900">AttendEase</span>
+              <span className="text-lg font-bold text-slate-900">
+                AbsenKerja
+              </span>
             </div>
 
             {/* Desktop breadcrumb */}
             <div className="hidden md:block">
               <h2 className="text-lg font-semibold text-slate-900">
-                {tabLabels[adminTab as AdminTab] || 'Dashboard'}
+                {tabLabels[adminTab as AdminTab] || "Dashboard"}
               </h2>
             </div>
           </div>
@@ -237,19 +291,21 @@ export function AdminLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <Suspense fallback={
-            <div className="space-y-6 p-4">
-              <Skeleton className="h-32 w-full rounded-xl" />
-              <Skeleton className="h-48 w-full rounded-xl" />
-            </div>
-          }>
+          <Suspense
+            fallback={
+              <div className="space-y-6 p-4">
+                <Skeleton className="h-32 w-full rounded-xl" />
+                <Skeleton className="h-48 w-full rounded-xl" />
+              </div>
+            }
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={adminTab}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 {renderContent()}
               </motion.div>
@@ -258,5 +314,5 @@ export function AdminLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

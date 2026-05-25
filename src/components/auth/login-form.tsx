@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { useState, type FormEvent } from 'react'
-import { motion } from 'framer-motion'
-import { LogIn, Mail, Lock, Briefcase } from 'lucide-react'
-import { useAuthStore } from '@/lib/auth-store'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState, type FormEvent } from "react";
+import { motion } from "framer-motion";
+import { LogIn, Mail, Lock, Briefcase } from "lucide-react";
+import { useAuthStore } from "@/lib/auth-store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -14,47 +14,47 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 
 export function LoginForm() {
-  const { login, setView } = useAuthStore()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const { login, setView } = useAuthStore();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     if (!email.trim()) {
-      setError('Email wajib diisi')
-      return
+      setError("Email wajib diisi");
+      return;
     }
     if (!password.trim()) {
-      setError('Password wajib diisi')
-      return
+      setError("Password wajib diisi");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const result = await login(email, password)
+      const result = await login(email, password);
       if (!result.success) {
-        setError(result.error || 'Login gagal')
+        setError(result.error || "Login gagal");
       }
     } catch {
-      setError('Terjadi kesalahan yang tidak terduga')
+      setError("Terjadi kesalahan yang tidak terduga");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-md"
       >
         <Card className="shadow-lg">
@@ -69,7 +69,7 @@ export function LoginForm() {
                 <Briefcase className="size-7" />
               </div>
               <CardTitle className="text-2xl font-bold tracking-tight">
-                AttendEase
+                AbsenKerja
               </CardTitle>
             </motion.div>
             <CardDescription className="text-sm mt-1">
@@ -82,7 +82,7 @@ export function LoginForm() {
               {error && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
+                  animate={{ opacity: 1, height: "auto" }}
                   className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive"
                 >
                   {error}
@@ -96,7 +96,7 @@ export function LoginForm() {
                   <Input
                     id="login-email"
                     type="email"
-                    placeholder="nama@perusahaan.com"
+                    placeholder="Email@.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -165,10 +165,10 @@ export function LoginForm() {
 
           <CardFooter className="justify-center">
             <p className="text-sm text-muted-foreground">
-              Belum punya akun?{' '}
+              Belum punya akun?{" "}
               <button
                 type="button"
-                onClick={() => setView('register')}
+                onClick={() => setView("register")}
                 className="font-medium text-primary hover:underline underline-offset-4 transition-colors"
               >
                 Daftar di sini
@@ -178,5 +178,5 @@ export function LoginForm() {
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

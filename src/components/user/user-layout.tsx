@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useAuthStore } from '@/lib/auth-store'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from "react";
+import { useAuthStore } from "@/lib/auth-store";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Calendar,
@@ -11,104 +11,114 @@ import {
   LogOut,
   CalendarCheck,
   ClipboardList,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
-import { Separator } from '@/components/ui/separator'
-import { lazy, Suspense } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { lazy, Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const UserDashboard = lazy(() => import('./user-dashboard').then(m => ({ default: m.UserDashboard })))
-const UserAttendance = lazy(() => import('./user-attendance').then(m => ({ default: m.UserAttendance })))
-const UserAttendanceRecap = lazy(() => import('./user-attendance-recap').then(m => ({ default: m.UserAttendanceRecap })))
-const UserProfile = lazy(() => import('./user-profile').then(m => ({ default: m.UserProfile })))
+const UserDashboard = lazy(() =>
+  import("./user-dashboard").then((m) => ({ default: m.UserDashboard })),
+);
+const UserAttendance = lazy(() =>
+  import("./user-attendance").then((m) => ({ default: m.UserAttendance })),
+);
+const UserAttendanceRecap = lazy(() =>
+  import("./user-attendance-recap").then((m) => ({
+    default: m.UserAttendanceRecap,
+  })),
+);
+const UserProfile = lazy(() =>
+  import("./user-profile").then((m) => ({ default: m.UserProfile })),
+);
 
-type UserTab = 'dashboard' | 'attendance' | 'attendance-recap' | 'profile'
+type UserTab = "dashboard" | "attendance" | "profile";
 
 const navItems = [
-  { key: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
-  { key: 'attendance' as const, label: 'Kehadiran Saya', icon: Calendar },
-  { key: 'attendance-recap' as const, label: 'Rekapan Kehadiran', icon: ClipboardList },
-  { key: 'profile' as const, label: 'Profil', icon: UserCircle },
-]
+  { key: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
+  { key: "attendance" as const, label: "Kehadiran Saya", icon: Calendar },
+  // { key: 'attendance-recap' as const, label: 'Rekapan Kehadiran', icon: ClipboardList },
+  { key: "profile" as const, label: "Profil", icon: UserCircle },
+];
 
 const tabLabels: Record<UserTab, string> = {
-  dashboard: 'Dashboard',
-  attendance: 'Kehadiran Saya',
-  'attendance-recap': 'Rekapan Kehadiran',
-  profile: 'Profil',
-}
+  dashboard: "Dashboard",
+  attendance: "Kehadiran Saya",
+  // 'attendance-recap': 'Rekapan Kehadiran',
+  profile: "Profil",
+};
 
 interface SidebarNavProps {
-  activeTab: string
-  onNavClick: (tab: UserTab) => void
-  onItemClick?: () => void
+  activeTab: string;
+  onNavClick: (tab: UserTab) => void;
+  onItemClick?: () => void;
 }
 
 function SidebarNav({ activeTab, onNavClick, onItemClick }: SidebarNavProps) {
   return (
     <nav className="flex flex-col gap-1 px-3">
       {navItems.map((item, idx) => {
-        const isActive = activeTab === item.key
+        const isActive = activeTab === item.key;
         return (
           <div key={item.key}>
             {idx === 2 && (
               <div className="px-3 pt-3 pb-1">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  Laporan
+                  MenuLain
                 </span>
               </div>
             )}
             <button
               onClick={() => {
-                onNavClick(item.key)
-                onItemClick?.()
+                onNavClick(item.key);
+                onItemClick?.();
               }}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-emerald-50 text-emerald-700 border-l-[3px] border-emerald-500 pl-[9px]'
-                  : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-l-[3px] border-transparent pl-[9px]'
+                  ? "bg-emerald-50 text-emerald-700 border-l-[3px] border-emerald-500 pl-[9px]"
+                  : "text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-l-[3px] border-transparent pl-[9px]"
               }`}
             >
               <item.icon className="h-5 w-5 shrink-0" />
               <span>{item.label}</span>
             </button>
           </div>
-        )
+        );
       })}
     </nav>
-  )
+  );
 }
 
 export function UserLayout() {
-  const { user, userTab, setUserTab, logout } = useAuthStore()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const { user, userTab, setUserTab, logout } = useAuthStore();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleNavClick = (tab: UserTab) => {
-    setUserTab(tab)
-    setMobileOpen(false)
-  }
+    setUserTab(tab);
+    setMobileOpen(false);
+  };
 
   const renderContent = () => {
     switch (userTab) {
-      case 'dashboard':
-        return <UserDashboard />
-      case 'attendance':
-        return <UserAttendance />
-      case 'attendance-recap':
-        return <UserAttendanceRecap />
-      case 'profile':
-        return <UserProfile />
+      case "dashboard":
+        return <UserDashboard />;
+      case "attendance":
+        return <UserAttendance />;
+      // case 'attendance-recap':
+      //   return <UserAttendanceRecap />
+      case "profile":
+        return <UserProfile />;
       default:
-        return <UserDashboard />
+        return <UserDashboard />;
     }
-  }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -117,7 +127,9 @@ export function UserLayout() {
         {/* Brand */}
         <div className="flex h-16 items-center gap-2 px-6">
           <CalendarCheck className="h-7 w-7 text-emerald-600" />
-          <span className="text-xl font-bold tracking-tight text-slate-900">AttendEase</span>
+          <span className="text-xl font-bold tracking-tight text-slate-900">
+            AbsenKerja
+          </span>
         </div>
         <Separator className="bg-slate-200" />
         <div className="flex-1 overflow-y-auto py-4">
@@ -128,7 +140,9 @@ export function UserLayout() {
           <div className="flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2.5">
             <UserCircle className="h-8 w-8 text-slate-400" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{user?.name}</p>
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {user?.name}
+              </p>
               <p className="text-xs text-slate-500 truncate">{user?.email}</p>
             </div>
           </div>
@@ -148,11 +162,14 @@ export function UserLayout() {
                   <span className="sr-only">Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-56 bg-white p-0 border-slate-200">
+              <SheetContent
+                side="left"
+                className="w-56 bg-white p-0 border-slate-200"
+              >
                 <SheetHeader className="px-6 pt-6 pb-0">
                   <SheetTitle className="text-slate-900 flex items-center gap-2">
                     <CalendarCheck className="h-6 w-6 text-emerald-600" />
-                    AttendEase
+                    AbsenKerja
                   </SheetTitle>
                 </SheetHeader>
                 <div className="py-4">
@@ -168,13 +185,15 @@ export function UserLayout() {
             {/* Mobile brand */}
             <div className="flex items-center gap-2 md:hidden">
               <CalendarCheck className="h-6 w-6 text-emerald-600" />
-              <span className="text-lg font-bold text-slate-900">AttendEase</span>
+              <span className="text-lg font-bold text-slate-900">
+                AbsenKerja
+              </span>
             </div>
 
             {/* Desktop title */}
             <div className="hidden md:block">
               <h2 className="text-lg font-semibold text-slate-900">
-                {tabLabels[userTab as UserTab] || 'Dashboard'}
+                {tabLabels[userTab as UserTab] || "Dashboard"}
               </h2>
             </div>
           </div>
@@ -198,19 +217,21 @@ export function UserLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <Suspense fallback={
-            <div className="space-y-6 p-4">
-              <Skeleton className="h-32 w-full rounded-xl" />
-              <Skeleton className="h-48 w-full rounded-xl" />
-            </div>
-          }>
+          <Suspense
+            fallback={
+              <div className="space-y-6 p-4">
+                <Skeleton className="h-32 w-full rounded-xl" />
+                <Skeleton className="h-48 w-full rounded-xl" />
+              </div>
+            }
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={userTab}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 {renderContent()}
               </motion.div>
@@ -219,5 +240,5 @@ export function UserLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

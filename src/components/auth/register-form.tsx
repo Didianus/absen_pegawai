@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { useState, type FormEvent } from 'react'
-import { motion } from 'framer-motion'
-import { UserPlus, Mail, Lock, User, Briefcase } from 'lucide-react'
-import { useAuthStore, type RegisterData } from '@/lib/auth-store'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState, type FormEvent } from "react";
+import { motion } from "framer-motion";
+import { UserPlus, Mail, Lock, User, Briefcase } from "lucide-react";
+import { useAuthStore, type RegisterData } from "@/lib/auth-store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -14,54 +14,54 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
 export function RegisterForm() {
-  const { register, setView } = useAuthStore()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState('USER')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const { register, setView } = useAuthStore();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("USER");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     if (!name.trim()) {
-      setError('Nama lengkap wajib diisi')
-      return
+      setError("Nama lengkap wajib diisi");
+      return;
     }
     if (!email.trim()) {
-      setError('Email wajib diisi')
-      return
+      setError("Email wajib diisi");
+      return;
     }
     if (!emailRegex.test(email)) {
-      setError('Format email tidak valid')
-      return
+      setError("Format email tidak valid");
+      return;
     }
     if (!password.trim()) {
-      setError('Password wajib diisi')
-      return
+      setError("Password wajib diisi");
+      return;
     }
     if (password.length < 6) {
-      setError('Password minimal 6 karakter')
-      return
+      setError("Password minimal 6 karakter");
+      return;
     }
     if (password !== confirmPassword) {
-      setError('Konfirmasi password tidak cocok')
-      return
+      setError("Konfirmasi password tidak cocok");
+      return;
     }
 
     const data: RegisterData = {
@@ -70,27 +70,27 @@ export function RegisterForm() {
       password,
       confirmPassword,
       role,
-    }
+    };
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const result = await register(data)
+      const result = await register(data);
       if (!result.success) {
-        setError(result.error || 'Registrasi gagal')
+        setError(result.error || "Registrasi gagal");
       }
     } catch {
-      setError('Terjadi kesalahan yang tidak terduga')
+      setError("Terjadi kesalahan yang tidak terduga");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-md"
       >
         <Card className="shadow-lg">
@@ -105,7 +105,7 @@ export function RegisterForm() {
                 <Briefcase className="size-7" />
               </div>
               <CardTitle className="text-2xl font-bold tracking-tight">
-                AttendEase
+                AbsenKerja
               </CardTitle>
             </motion.div>
             <CardDescription className="text-sm mt-1">
@@ -118,7 +118,7 @@ export function RegisterForm() {
               {error && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
+                  animate={{ opacity: 1, height: "auto" }}
                   className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive"
                 >
                   {error}
@@ -149,7 +149,7 @@ export function RegisterForm() {
                   <Input
                     id="register-email"
                     type="email"
-                    placeholder="nama@perusahaan.com"
+                    placeholder="Email@.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -254,10 +254,10 @@ export function RegisterForm() {
 
           <CardFooter className="justify-center">
             <p className="text-sm text-muted-foreground">
-              Sudah punya akun?{' '}
+              Sudah punya akun?{" "}
               <button
                 type="button"
-                onClick={() => setView('login')}
+                onClick={() => setView("login")}
                 className="font-medium text-primary hover:underline underline-offset-4 transition-colors"
               >
                 Masuk di sini
@@ -267,5 +267,5 @@ export function RegisterForm() {
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

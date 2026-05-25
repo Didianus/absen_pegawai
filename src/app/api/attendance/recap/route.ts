@@ -1,23 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get('month'); // YYYY-MM format
-    const department = searchParams.get('department');
+    const month = searchParams.get("month"); // YYYY-MM format
+    const department = searchParams.get("department");
 
     if (!month) {
-      return NextResponse.json({ error: 'Month parameter is required (YYYY-MM)' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Month parameter is required (YYYY-MM)" },
+        { status: 400 },
+      );
     }
 
-    if (user.role !== 'ADMIN') {
+    if (user.role !== "ADMIN") {
       // For regular users, only return their own recap
       const userData = await db.user.findUnique({
         where: { id: user.id },
@@ -31,7 +34,7 @@ export async function GET(request: NextRequest) {
       });
 
       if (!userData) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
 
       // Get attendance records - ONLY the fields we need (NO photos!)
@@ -46,31 +49,36 @@ export async function GET(request: NextRequest) {
           checkOut: true,
           status: true,
         },
-        orderBy: { date: 'asc' },
+        orderBy: { date: "asc" },
       });
 
-      const totalDaysInMonth = getWorkingDaysInMonth(month);
-      const presentDays = attendances.filter((a) => a.status === 'PRESENT').length;
-      const lateDays = attendances.filter((a) => a.status === 'LATE').length;
+      const totalDaysInMonth = 25;
+      const presentDays = attendances.filter(
+        (a) => a.status === "PRESENT",
+      ).length;
+      const lateDays = attendances.filter((a) => a.status === "LATE").length;
       const absentDays = totalDaysInMonth - attendances.length;
-      const attendanceRate = totalDaysInMonth > 0
-        ? Math.round(((presentDays + lateDays) / totalDaysInMonth) * 100)
-        : 0;
+      const attendanceRate =
+        totalDaysInMonth > 0
+          ? Math.round(((presentDays + lateDays) / totalDaysInMonth) * 100)
+          : 0;
 
       return NextResponse.json({
-        recap: [{
-          id: userData.id,
-          name: userData.name,
-          email: userData.email,
-          position: userData.position,
-          department: userData.department,
-          totalDaysInMonth,
-          presentDays,
-          lateDays,
-          absentDays,
-          attendanceRate,
-          details: attendances,
-        }],
+        recap: [
+          {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            position: userData.position,
+            department: userData.department,
+            totalDaysInMonth,
+            presentDays,
+            lateDays,
+            absentDays,
+            attendanceRate,
+            details: attendances,
+          },
+        ],
         month,
       });
     }
@@ -90,16 +98,18 @@ export async function GET(request: NextRequest) {
         position: true,
         department: true,
       },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
 
     // Get attendance records for the month - ONLY needed fields (NO photos!)
     const attendances = await db.attendance.findMany({
       where: {
         date: { startsWith: month },
-        ...(department ? {
-          user: { department },
-        } : {}),
+        ...(department
+          ? {
+              user: { department },
+            }
+          : {}),
       },
       select: {
         userId: true,
@@ -118,16 +128,21 @@ export async function GET(request: NextRequest) {
       attendanceByUser.set(att.userId, list);
     }
 
-    const totalDaysInMonth = getWorkingDaysInMonth(month);
+    const totalDaysInMonth = 25;
 
     const recap = users.map((u) => {
       const userAttendances = attendanceByUser.get(u.id) || [];
-      const presentDays = userAttendances.filter((a) => a.status === 'PRESENT').length;
-      const lateDays = userAttendances.filter((a) => a.status === 'LATE').length;
+      const presentDays = userAttendances.filter(
+        (a) => a.status === "PRESENT",
+      ).length;
+      const lateDays = userAttendances.filter(
+        (a) => a.status === "LATE",
+      ).length;
       const absentDays = totalDaysInMonth - userAttendances.length;
-      const attendanceRate = totalDaysInMonth > 0
-        ? Math.round(((presentDays + lateDays) / totalDaysInMonth) * 100)
-        : 0;
+      const attendanceRate =
+        totalDaysInMonth > 0
+          ? Math.round(((presentDays + lateDays) / totalDaysInMonth) * 100)
+          : 0;
 
       return {
         id: u.id,
@@ -152,8 +167,8 @@ export async function GET(request: NextRequest) {
     // Get unique departments for filter
     const allDepartments = await db.user.findMany({
       select: { department: true },
-      distinct: ['department'],
-      where: { department: { not: '' } },
+      distinct: ["department"],
+      where: { department: { not: "" } },
     });
 
     return NextResponse.json({
@@ -162,20 +177,21 @@ export async function GET(request: NextRequest) {
       departments: allDepartments.map((d) => d.department),
     });
   } catch (error) {
-    console.error('Attendance recap error:', error);
+    console.error("Attendance recap error:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch attendance recap' },
-      { status: 500 }
+      { error: "Failed to fetch attendance recap" },
+      { status: 500 },
     );
   }
 }
 
 // Calculate working days in a month (Mon-Fri)
 function getWorkingDaysInMonth(monthStr: string): number {
-  const [year, month] = monthStr.split('-').map(Number);
+  const [year, month] = monthStr.split("-").map(Number);
   const now = new Date();
 
-  const isCurrentMonth = year === now.getFullYear() && month === (now.getMonth() + 1);
+  const isCurrentMonth =
+    year === now.getFullYear() && month === now.getMonth() + 1;
   const lastDay = isCurrentMonth
     ? now.getDate()
     : new Date(year, month, 0).getDate();

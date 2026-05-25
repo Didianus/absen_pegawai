@@ -14,10 +14,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AttendEase - Sistem Manajemen Kehadiran Karyawan",
-  description: "Aplikasi manajemen kehadiran karyawan modern dengan fitur check-in/check-out, dashboard admin, dan laporan kehadiran.",
-  keywords: ["attendance", "kehadiran", "absensi", "karyawan", "manajemen", "HR"],
-  authors: [{ name: "AttendEase" }],
+  title: "AbsenKerja - Sistem Manajemen Kehadiran Karyawan",
+  description:
+    "Aplikasi manajemen kehadiran karyawan modern dengan fitur check-in/check-out, dashboard admin, dan laporan kehadiran.",
+  keywords: [
+    "attendance",
+    "kehadiran",
+    "absensi",
+    "karyawan",
+    "manajemen",
+    "HR",
+  ],
+  authors: [{ name: "AbsenKerja" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
