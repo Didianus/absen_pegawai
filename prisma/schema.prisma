@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -27,21 +27,26 @@ model User {
 model Attendance {
   id             String   @id @default(cuid())
   userId         String
-  date           String   // YYYY-MM-DD format
-  checkIn        String?  // HH:mm format
-  checkOut       String?  // HH:mm format
-  status         String   @default("PRESENT") // PRESENT, LATE, ABSENT
+  date           String
+
+  checkIn        String?
+  checkOut       String?
+
+  status         String   @default("PRESENT")
   note           String   @default("")
-  checkInPhoto   String   @default("") // Base64 encoded photo on check-in
-  checkOutPhoto  String   @default("") // Base64 encoded photo on check-out
-  checkInLat     String   @default("") // Latitude on check-in
-  checkInLng     String   @default("") // Longitude on check-in
-  checkOutLat    String   @default("") // Latitude on check-out
-  checkOutLng    String   @default("") // Longitude on check-out
+
+  checkInPhoto   String?  @db.LongText
+  checkOutPhoto  String?  @db.LongText
+
+  checkInLat     String   @default("")
+  checkInLng     String   @default("")
+  checkOutLat    String   @default("")
+  checkOutLng    String   @default("")
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, date]) // One attendance record per user per day
 }

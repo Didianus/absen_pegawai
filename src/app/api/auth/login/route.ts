@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { db } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
@@ -11,8 +11,8 @@ export async function POST(request: Request) {
     // Validate required fields
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
+        { error: "Email and password are required" },
+        { status: 400 },
       );
     }
 
@@ -23,8 +23,8 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
+        { error: "Invalid email or password" },
+        { status: 401 },
       );
     }
 
@@ -33,8 +33,8 @@ export async function POST(request: Request) {
 
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
+        { error: "Invalid email or password" },
+        { status: 401 },
       );
     }
 
@@ -48,26 +48,26 @@ export async function POST(request: Request) {
 
     // Set session cookie
     const cookieStore = await cookies();
-    cookieStore.set('attendance_session', JSON.stringify(sessionData), {
+    cookieStore.set("attendance_session", JSON.stringify(sessionData), {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === "production",
       maxAge: 86400, // 24 hours
-      path: '/',
-      sameSite: 'lax',
+      path: "/",
+      sameSite: "lax",
     });
 
     // Return user data without password
     const { password: _, ...userWithoutPassword } = user;
 
     return NextResponse.json({
-      message: 'Login successful',
+      message: "Login successful",
       user: userWithoutPassword,
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
